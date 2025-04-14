@@ -3,11 +3,6 @@
 ## Repository Overview
 This repository serves as a comprehensive lab environment for practicing Cloud Detection and Response (CDR) using XSIAM and Prisma Cloud. The labs simulate real-world cloud-native threats in a controlled environment.
 
-### Key Components
-- XSIAM (Palo Alto Networks' security platform)
-- Prisma Cloud
-- Kubernetes
-- Container orchestration platforms
 
 ## Configuration Files
 
