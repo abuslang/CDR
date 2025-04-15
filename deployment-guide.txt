@@ -1,0 +1,186 @@
+## Detailed Deployment Instructions by OS
+
+### Prerequisites
+- AWS account with appropriate permissions
+- AWS Access Key ID and Secret Access Key
+- About 1 hour of time for complete setup
+- Stable internet connection
+
+### macOS Deployment
+
+1. **Install Homebrew** (if not already installed):
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+2. **Install Required Tools**:
+```bash
+# Install AWS CLI
+brew install awscli
+
+# Install eksctl
+brew tap weaveworks/tap
+brew install weaveworks/tap/eksctl
+
+# Install kubectl
+brew install kubectl
+```
+
+3. **Configure AWS CLI**:
+```bash
+aws configure
+```
+Enter:
+- AWS Access Key ID
+- AWS Secret Access Key
+- Default region: us-east-2
+- Default output format: json
+
+4. **Verify Installations**:
+```bash
+aws --version
+eksctl version
+kubectl version --client
+```
+
+### Arch Linux Deployment
+
+1. **Install Required Tools**:
+```bash
+# Install AWS CLI
+sudo pacman -S aws-cli
+
+# Install eksctl (using yay)
+yay -S eksctl-bin
+
+# Install kubectl
+sudo pacman -S kubectl
+```
+
+2. **Configure AWS CLI**:
+```bash
+aws configure
+```
+Enter:
+- AWS Access Key ID
+- AWS Secret Access Key
+- Default region: us-east-2
+- Default output format: json
+
+3. **Verify Installations**:
+```bash
+aws --version
+eksctl version
+kubectl version --client
+```
+
+### Ubuntu/Debian Deployment
+
+1. **Install Required Tools**:
+```bash
+# Install AWS CLI
+sudo apt update
+sudo apt install awscli
+
+# Install eksctl
+curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+sudo mv /tmp/eksctl /usr/local/bin
+
+# Install kubectl
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+```
+
+2. **Configure AWS CLI**:
+```bash
+aws configure
+```
+Enter:
+- AWS Access Key ID
+- AWS Secret Access Key
+- Default region: us-east-2
+- Default output format: json
+
+3. **Verify Installations**:
+```bash
+aws --version
+eksctl version
+kubectl version --client
+```
+
+### Common Deployment Steps (All OS)
+
+1. **Create EKS Cluster**:
+```bash
+eksctl create cluster \
+  --name cdr-lab-cluster \
+  --region us-east-2 \
+  --node-type t3.medium \
+  --nodes 2 \
+  --nodes-min 2 \
+  --nodes-max 3
+```
+This will take about 15-20 minutes to complete.
+
+2. **Configure kubectl**:
+```bash
+aws eks update-kubeconfig --name cdr-lab-cluster --region us-east-2
+```
+
+3. **Verify Cluster Access**:
+```bash
+kubectl get nodes
+```
+You should see 2 nodes in "Ready" state.
+
+4. **Deploy cdr.yml**:
+```bash
+kubectl apply -f cdr.yml
+```
+
+5. **Verify the Deployment**:
+```bash
+# Check the malicious pod
+kubectl get pods
+
+# Check the cryptominer daemonset
+kubectl get daemonsets -n kube-system
+
+# Check the cronjob
+kubectl get cronjobs
+```
+
+6. **Monitor the Deployment**:
+```bash
+# Watch the malicious pod
+kubectl describe pod alpine-cdr-1
+
+# Watch the cryptominer daemonset
+kubectl describe daemonset kube-controller -n kube-system
+
+# Watch the cronjob
+kubectl describe cronjob cryptominer-persistance
+```
+
+### Cost Considerations
+- EKS cluster control plane: $0.10/hour
+- t3.medium instances: $0.0416/hour each
+- Estimated weekly cost: ~$38.71
+- Monitor AWS bill for unexpected costs
+- Consider using AWS Budgets to set cost alerts
+
+### Cleanup
+```bash
+# Delete the malicious deployment
+kubectl delete -f cdr.yml
+
+# Delete the cluster (optional)
+eksctl delete cluster --name cdr-lab-cluster --region us-east-2
+```
+
+### Important Notes
+1. The deployment will start mining cryptocurrency to a specific wallet
+2. CPU usage will be significant due to cryptominer operations
+3. Run in a separate AWS account or VPC if possible
+4. Consider using spot instances for cost optimization
+5. Monitor resource usage and AWS costs regularly 
